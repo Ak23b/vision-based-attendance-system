@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Attendance Records</title>
+</head>
+<body>
+    <h1>📊 Attendance Log</h1>
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Name</th>
+            <th>Timestamp</th>
+        </tr>
+        {% for name, timestamp in records %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="/">⬅ Back</a>
+</body>
+</html>
