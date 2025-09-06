@@ -1,89 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Attendance System (Manual)</title>
+    <title>Student Attendance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            padding: 8px;
+            margin-top: 5px;
+            width: 250px;
+        }
+        button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .message {
+            margin-top: 20px;
+            color: green;
+        }
+        .error {
+            margin-top: 20px;
+            color: red;
+        }
+        .admin-link {
+            margin-top: 30px;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
-  <h2>Manual Attendance Check-In</h2>
+    <h1>👩‍🎓 Student Attendance Check-in</h1>
+    
+    <form method="POST" action="/">
+        <label for="student_id">Student ID:</label>
+        <input type="text" name="student_id" required>
+        
+        <label for="name">Full Name:</label>
+        <input type="text" name="name" required>
+        
+        <button type="submit">Check In ✅</button>
+    </form>
 
-  <label for="name">Name:</label>
-  <input type="text" id="name" placeholder="Enter Name">
+    <!-- Display messages -->
+    {% if message %}
+        <p class="message">{{ message }}</p>
+    {% endif %}
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
 
-  <label for="studentId">Student ID:</label>
-  <input type="text" id="studentId" placeholder="Enter ID">
-
-  <button onclick="checkIn()">Check In</button>
-  <hr>
-
-  <!-- Export buttons -->
-  <button onclick="exportCSV()">Export to CSV</button>
-  <button onclick="exportPDF()">Export to PDF</button>
-
-  <!-- jsPDF library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <script>
-    let attendanceLogs = [];
-
-    function checkIn() {
-      const name = document.getElementById("name").value;
-      const id = document.getElementById("studentId").value;
-
-      if (name && id) {
-        const timestamp = new Date().toLocaleString();
-        attendanceLogs.push({ name, id, time: timestamp });
-
-        alert(`${name} (ID: ${id}) checked in at ${timestamp}`);
-
-        document.getElementById("name").value = "";
-        document.getElementById("studentId").value = "";
-      } else {
-        alert("Please enter both Name and ID.");
-      }
-    }
-
-    function exportCSV() {
-      if (attendanceLogs.length === 0) {
-        alert("No attendance logs to export.");
-        return;
-      }
-
-      let csvContent = "data:text/csv;charset=utf-8,Name,Student ID,Time\n";
-      attendanceLogs.forEach(log => {
-        csvContent += `${log.name},${log.id},${log.time}\n`;
-      });
-
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "attendance_logs.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function exportPDF() {
-      if (attendanceLogs.length === 0) {
-        alert("No attendance logs to export.");
-        return;
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      doc.setFontSize(14);
-      doc.text("Attendance Report", 14, 20);
-
-      let y = 40;
-      doc.setFontSize(12);
-      attendanceLogs.forEach((log, index) => {
-        doc.text(`${index + 1}. ${log.name} | ID: ${log.id} | Time: ${log.time}`, 14, y);
-        y += 10;
-      });
-
-      doc.save("attendance_logs.pdf");
-    }
-  </script>
+    <!-- Admin/Teacher link -->
+    <a class="admin-link" href="/attendance">🔒 Teacher/Admin Login</a>
 </body>
 </html>

@@ -2,22 +2,65 @@
 <html>
 <head>
     <title>Attendance Records</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            border-collapse: collapse;
+            width: 80%;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #555;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        .error {
+            color: red;
+        }
+        .back-link {
+            margin-top: 20px;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
     <h1>📊 Attendance Log</h1>
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Name</th>
-            <th>Timestamp</th>
-        </tr>
-        {% for name, timestamp in records %}
-        <tr>
-            <td>{{ name }}</td>
-            <td>{{ timestamp }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-    <br>
-    <a href="/">⬅ Back</a>
+
+    {% if not authorized %}
+        <!-- Password form if not logged in -->
+        <form method="POST" action="/attendance">
+            <label for="password">Enter Admin Password:</label>
+            <input type="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    {% else %}
+        <!-- Attendance table for authorized users -->
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Timestamp</th>
+            </tr>
+            {% for name, timestamp in records %}
+            <tr>
+                <td>{{ name }}</td>
+                <td>{{ timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <a href="/" class="back-link">⬅ Back</a>
+    {% endif %}
 </body>
 </html>
