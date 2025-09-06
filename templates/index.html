@@ -1,74 +1,23 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Student Attendance</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            margin-top: 20px;
-        }
-        label {
-            display: block;
-            margin-top: 10px;
-        }
-        input {
-            padding: 8px;
-            margin-top: 5px;
-            width: 250px;
-        }
-        button {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .message {
-            margin-top: 20px;
-            color: green;
-        }
-        .error {
-            margin-top: 20px;
-            color: red;
-        }
-        .admin-link {
-            margin-top: 30px;
-            display: inline-block;
-        }
-    </style>
 </head>
 <body>
-    <h1>👩‍🎓 Student Attendance Check-in</h1>
-    
-    <form method="POST" action="/">
+    <h1>Student Attendance</h1>
+
+    <form action="/" method="POST">
         <label for="student_id">Student ID:</label>
-        <input type="text" name="student_id" required>
-        
-        <label for="name">Full Name:</label>
-        <input type="text" name="name" required>
-        
-        <button type="submit">Check In ✅</button>
+        <input type="text" name="student_id" required><br><br>
+
+        <label for="name">Name:</label>
+        <input type="text" name="name" required><br><br>
+
+        <button type="submit">Mark Attendance</button>
     </form>
 
-    <!-- Display messages -->
-    {% if message %}
-        <p class="message">{{ message }}</p>
-    {% endif %}
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-
-    <!-- Admin/Teacher link -->
-    <a class="admin-link" href="/attendance">🔒 Teacher/Admin Login</a>
+    <br><br>
+    <a href="{{ url_for('login') }}">Teacher/Admin Login</a>
 </body>
 </html>
