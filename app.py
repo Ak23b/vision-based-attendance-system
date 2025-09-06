@@ -78,3 +78,5 @@ def attendance():
     return render_template("attendance.html", records=records)
 
 # ---------- Other routes (login, logout, settings, exports, etc.) remain the same ----------
+if __name__ == "__main__":
+    app.run(debug=True)
