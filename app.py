@@ -1,36 +1,47 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # required for sessions
-
+app.secret_key = "supersecretkey"
 DB_FILE = "attendance.db"
 
-# Create database if it doesn't exist
+
+# Initialize DB
 def init_db():
-    if not os.path.exists(DB_FILE):
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute("""
-            CREATE TABLE attendance (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id TEXT,
-                name TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        conn.commit()
-        conn.close()
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+
+    # Attendance table
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS attendance (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            student_id TEXT,
+            name TEXT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    # Users table
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    """)
+
+    conn.commit()
+    conn.close()
 
 init_db()
 
 
+# ---------- Routes ----------
 @app.route("/", methods=["GET", "POST"])
 def index():
-    message = None
-    error = None
-
+    message, error = None, None
     if request.method == "POST":
         student_id = request.form.get("student_id")
         name = request.form.get("name")
@@ -44,40 +55,67 @@ def index():
             message = f"✅ {name} (ID: {student_id}) checked in successfully!"
         else:
             error = "⚠ Please enter both Student ID and Name."
-
     return render_template("index.html", message=message, error=error)
 
 
-@app.route("/attendance", methods=["GET", "POST"])
+@app.route("/attendance")
 def attendance():
-    # Password for teachers/admins
-    ADMIN_PASSWORD = "admin123"
+    if "user" not in session:
+        return redirect(url_for("login"))
 
-    # If not logged in, ask for password
-    if "logged_in" not in session:
-        if request.method == "POST":
-            password = request.form.get("password")
-            if password == ADMIN_PASSWORD:
-                session["logged_in"] = True
-                return redirect(url_for("attendance"))
-            else:
-                return render_template("login.html", error="❌ Wrong password!")
-        return render_template("login.html")
-
-    # If logged in, show records
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT student_id, name, timestamp FROM attendance ORDER BY timestamp DESC")
     records = c.fetchall()
     conn.close()
+    return render_template("attendance.html", records=records, user=session["user"])
 
-    return render_template("attendance.html", records=records)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("SELECT password FROM users WHERE username = ?", (username,))
+        result = c.fetchone()
+        conn.close()
+
+        if result and check_password_hash(result[0], password):
+            session["user"] = username
+            return redirect(url_for("attendance"))
+        else:
+            error = "❌ Invalid username or password."
+    return render_template("login.html", error=error)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        hashed_pw = generate_password_hash(password)
+
+        try:
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, hashed_pw))
+            conn.commit()
+            conn.close()
+            return redirect(url_for("login"))
+        except sqlite3.IntegrityError:
+            error = "⚠ Username already exists."
+    return render_template("register.html", error=error)
 
 
 @app.route("/logout")
 def logout():
-    session.pop("logged_in", None)
-    return redirect(url_for("index"))
+    session.pop("user", None)
+    return redirect(url_for("login"))
 
 
 if __name__ == "__main__":
