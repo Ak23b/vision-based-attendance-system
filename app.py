@@ -1,82 +1,151 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
-import csv
-import io
-from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "your_secret_key"
+DB_NAME = "attendance.db"
 
-# ---------- Database Setup ----------
+
+# ---------- INIT DB ----------
 def init_db():
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
 
     # Attendance table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            timestamp TEXT
-        )
-    """)
+    c.execute('''CREATE TABLE IF NOT EXISTS attendance (
+                    student_id TEXT,
+                    name TEXT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
 
-    # --- Migration: Add student_id column if missing ---
-    cursor.execute("PRAGMA table_info(attendance)")
-    columns = [col[1] for col in cursor.fetchall()]
-    if "student_id" not in columns:
-        cursor.execute("ALTER TABLE attendance ADD COLUMN student_id TEXT")
+    # Users table
+    c.execute('''CREATE TABLE IF NOT EXISTS users (
+                    username TEXT PRIMARY KEY,
+                    password TEXT)''')
 
-    # Admins table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS admins (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
-    """)
+    # Add default admin if not exists
+    c.execute("SELECT * FROM users WHERE username=?", ("admin",))
+    if not c.fetchone():
+        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", ("admin", "admin123"))
 
-    # Insert default admin if none exists
-    cursor.execute("SELECT * FROM admins")
-    if not cursor.fetchone():
-        cursor.execute("INSERT INTO admins (username, password) VALUES (?, ?)", ("admin", "admin123"))
-    
     conn.commit()
     conn.close()
 
+
 init_db()
 
-# ---------- Routes ----------
+
+# ---------- STUDENT CHECK-IN ----------
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        name = request.form["name"]
         student_id = request.form["student_id"]
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        name = request.form["name"]
 
-        conn = sqlite3.connect("attendance.db")
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO attendance (name, student_id, timestamp) VALUES (?, ?, ?)",
-                       (name, student_id, timestamp))
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute("INSERT INTO attendance (student_id, name) VALUES (?, ?)", (student_id, name))
         conn.commit()
         conn.close()
 
-        return f"{name} (ID: {student_id}) checked in at {timestamp}"
+        return render_template("index.html", message=f"{name} checked in successfully!")
+
     return render_template("index.html")
 
-@app.route("/attendance")
-def attendance():
-    if "username" not in session:
+
+# ---------- LOGIN ----------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = c.fetchone()
+        conn.close()
+
+        if user:
+            session["logged_in"] = True
+            session["username"] = username
+            return redirect(url_for("attendance"))
+        else:
+            return render_template("login.html", error="Invalid username or password")
+
+    return render_template("login.html")
+
+
+# ---------- REGISTER NEW ADMIN ----------
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+
+        try:
+            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            conn.commit()
+            conn.close()
+            return render_template("register.html", message="New admin created successfully!")
+        except sqlite3.IntegrityError:
+            conn.close()
+            return render_template("register.html", error="Username already exists!")
+
+    return render_template("register.html")
+
+
+# ---------- SETTINGS (Change Password) ----------
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if not session.get("logged_in"):
         return redirect(url_for("login"))
 
-    conn = sqlite3.connect("attendance.db")
-    cursor = conn.cursor()
-    cursor.execute("SELECT name, student_id, timestamp FROM attendance ORDER BY timestamp DESC")
-    records = cursor.fetchall()
+    if request.method == "POST":
+        old_password = request.form["old_password"]
+        new_password = request.form["new_password"]
+
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE username=? AND password=?", (session["username"], old_password))
+        user = c.fetchone()
+
+        if user:
+            c.execute("UPDATE users SET password=? WHERE username=?", (new_password, session["username"]))
+            conn.commit()
+            conn.close()
+            return render_template("settings.html", message="Password updated successfully!")
+        else:
+            conn.close()
+            return render_template("settings.html", error="Old password is incorrect.")
+
+    return render_template("settings.html")
+
+
+# ---------- ATTENDANCE ----------
+@app.route("/attendance")
+def attendance():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT student_id, name, timestamp FROM attendance")
+    rows = c.fetchall()
     conn.close()
 
-    return render_template("attendance.html", records=records)
+    return render_template("attendance.html", rows=rows)
 
-# ---------- Other routes (login, logout, settings, exports, etc.) remain the same ----------
+
+# ---------- LOGOUT ----------
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    session.pop("username", None)
+    return redirect(url_for("index"))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
