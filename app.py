@@ -1,79 +1,84 @@
-import os
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
-from flask import Flask, request, render_template
-import cv2
+import os
 
 app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = "uploads"
+app.secret_key = "supersecretkey"  # required for sessions
 
-# Make sure uploads folder exists
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+DB_FILE = "attendance.db"
 
-# ========== Database Setup ==========
+# Create database if it doesn't exist
 def init_db():
-    conn = sqlite3.connect("attendance.db")
-    c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS attendance (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
+    if not os.path.exists(DB_FILE):
+        conn = sqlite3.connect(DB_FILE)
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE attendance (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id TEXT,
+                name TEXT,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
 
 init_db()
 
-# ========== Face Detection ==========
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
-def detect_face(image_path):
-    img = cv2.imread(image_path)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-    return len(faces) > 0
-
-# ========== Routes ==========
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return render_template("index.html")
+    message = None
+    error = None
 
-@app.route("/upload", methods=["POST"])
-def upload():
-    if "file" not in request.files or "name" not in request.form:
-        return "No file or name provided", 400
+    if request.method == "POST":
+        student_id = request.form.get("student_id")
+        name = request.form.get("name")
 
-    file = request.files["file"]
-    name = request.form["name"]
+        if student_id and name:
+            conn = sqlite3.connect(DB_FILE)
+            c = conn.cursor()
+            c.execute("INSERT INTO attendance (student_id, name) VALUES (?, ?)", (student_id, name))
+            conn.commit()
+            conn.close()
+            message = f"✅ {name} (ID: {student_id}) checked in successfully!"
+        else:
+            error = "⚠ Please enter both Student ID and Name."
 
-    if file.filename == "":
-        return "No selected file", 400
+    return render_template("index.html", message=message, error=error)
 
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
-    file.save(filepath)
 
-    # Run face detection
-    if detect_face(filepath):
-        conn = sqlite3.connect("attendance.db")
-        c = conn.cursor()
-        c.execute("INSERT INTO attendance (name) VALUES (?)", (name,))
-        conn.commit()
-        conn.close()
-        msg = f"✅ Attendance marked for {name}"
-    else:
-        msg = "⚠️ No face detected, try again."
-
-    return render_template("index.html", message=msg)
-
-@app.route("/attendance")
+@app.route("/attendance", methods=["GET", "POST"])
 def attendance():
-    conn = sqlite3.connect("attendance.db")
+    # Password for teachers/admins
+    ADMIN_PASSWORD = "admin123"
+
+    # If not logged in, ask for password
+    if "logged_in" not in session:
+        if request.method == "POST":
+            password = request.form.get("password")
+            if password == ADMIN_PASSWORD:
+                session["logged_in"] = True
+                return redirect(url_for("attendance"))
+            else:
+                return render_template("login.html", error="❌ Wrong password!")
+        return render_template("login.html")
+
+    # If logged in, show records
+    conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    c.execute("SELECT name, timestamp FROM attendance ORDER BY timestamp DESC")
+    c.execute("SELECT student_id, name, timestamp FROM attendance ORDER BY timestamp DESC")
     records = c.fetchall()
     conn.close()
+
     return render_template("attendance.html", records=records)
+
+
+@app.route("/logout")
+def logout():
+    session.pop("logged_in", None)
+    return redirect(url_for("index"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
