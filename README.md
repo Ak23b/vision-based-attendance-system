@@ -22,6 +22,9 @@ Attendance logs can be **exported to CSV or PDF** for easy reporting.
   - templates/
     - index.html          # Main HTML file
     - attendance.html     # Attendance log display
+    - settings.html       # Settings page
+    - login.html          # Admin login page
+    -register.html       # Admin registration page
   - uploads/              # Directory for uploaded files (if any)
   - app.py                # Main Flask application
   - requirements.txt      # Python dependencies
