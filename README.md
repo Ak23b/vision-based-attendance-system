@@ -39,7 +39,7 @@ Attendance logs can be **exported to CSV or PDF** for easy reporting.
 2. Run the app.py in your terminal with "python app.py".
 
 3. Enter your **Name** and **Student ID**, then click **Check In**.
-4. If you're an admin, click the Admin login button to view and export attendance logs.
+4. If you're an admin and have an account, click the Admin login button(If you created an account) to view and export attendance logs. You can also create an account by clicking the create account button.
 5. Use the **Export to CSV** or **Export to PDF** buttons to download the
 
 ## Technologies Used
