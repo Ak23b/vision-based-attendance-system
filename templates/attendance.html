@@ -5,7 +5,7 @@
 </head>
 <body>
     <h1>📊 Attendance Log</h1>
-    <table border="1" cellpadding="10">
+    <table id="attendanceTable" border="1" cellpadding="10">
         <tr>
             <th>Name</th>
             <th>Student ID</th>
@@ -21,7 +21,61 @@
     </table>
 
     <br>
+    <!-- Export buttons -->
+    <button onclick="exportCSV()">📥 Export to CSV</button>
+    <button onclick="exportPDF()">📄 Export to PDF</button>
+
+    <br><br>
     <a href="{{ url_for('settings') }}">⚙ Settings</a> |
     <a href="{{ url_for('logout') }}">Logout</a>
+
+    <!-- jsPDF library for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        // Export table to CSV
+        function exportCSV() {
+            let table = document.getElementById("attendanceTable");
+            let rows = table.querySelectorAll("tr");
+            let csv = [];
+
+            rows.forEach(row => {
+                let cols = row.querySelectorAll("td, th");
+                let rowData = [];
+                cols.forEach(col => rowData.push(col.innerText));
+                csv.push(rowData.join(","));
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+            let link = document.createElement("a");
+            link.setAttribute("href", encodeURI(csvContent));
+            link.setAttribute("download", "attendance_logs.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Export table to PDF
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(14);
+            doc.text("Attendance Report", 14, 20);
+
+            let table = document.getElementById("attendanceTable");
+            let rows = table.querySelectorAll("tr");
+
+            let y = 40;
+            rows.forEach((row, i) => {
+                let cols = row.querySelectorAll("td, th");
+                let rowData = [];
+                cols.forEach(col => rowData.push(col.innerText));
+                doc.text(rowData.join(" | "), 14, y);
+                y += 10;
+            });
+
+            doc.save("attendance_logs.pdf");
+        }
+    </script>
 </body>
 </html>
