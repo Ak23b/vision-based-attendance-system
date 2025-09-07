@@ -3,21 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <title>Student Attendance</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #bb86fc;
+        }
+
+        form {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            display: inline-block;
+            text-align: left;
+            border: 1px solid #333;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #e0e0e0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background-color: #2c2c2c;
+            color: #fff;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #bb86fc;
+            background-color: #333;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            background-color: #bb86fc;
+            color: white;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #9a67ea;
+        }
+
+        a {
+            color: #03dac6;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Student Attendance</h1>
+    <h1>📋 Student Attendance</h1>
 
     <form action="/" method="POST">
         <label for="student_id">Student ID:</label>
-        <input type="text" name="student_id" required><br><br>
+        <input type="text" name="student_id" required>
 
         <label for="name">Name:</label>
-        <input type="text" name="name" required><br><br>
+        <input type="text" name="name" required>
 
-        <button type="submit">Mark Attendance</button>
+        <button type="submit">✅ Mark Attendance</button>
     </form>
 
     <br><br>
-    <a href="{{ url_for('login') }}">Teacher/Admin Login</a>
+    <a href="{{ url_for('login') }}">🔑 Teacher/Admin Login</a>
 </body>
 </html>
