@@ -15,10 +15,14 @@
             color: #bb86fc;
         }
 
+        h2 {
+            color: #03dac6;
+        }
+
         table {
             margin: 20px auto;
             border-collapse: collapse;
-            width: 80%;
+            width: 85%;
             background-color: #1e1e1e;
             border: 1px solid #333;
             border-radius: 8px;
@@ -42,6 +46,16 @@
 
         tr:hover {
             background-color: #333;
+        }
+
+        .status-on {
+            color: #03dac6;
+            font-weight: bold;
+        }
+
+        .status-late {
+            color: #ff5252;
+            font-weight: bold;
         }
 
         button {
@@ -73,17 +87,21 @@
 </head>
 <body>
     <h1>📊 Attendance Log</h1>
+    <h2>{{ today }}</h2>
+
     <table id="attendanceTable">
         <tr>
             <th>Name</th>
             <th>Student ID</th>
-            <th>Timestamp</th>
+            <th>Sign-in Time</th>
+            <th>Status</th>
         </tr>
-        {% for student_id, name, timestamp in rows %}
+        {% for student_id, name, sign_in_time, status in rows %}
         <tr>
             <td>{{ name }}</td>
             <td>{{ student_id }}</td>
-            <td>{{ timestamp }}</td>
+            <td>{{ sign_in_time }}</td>
+            <td class="status-{{ 'on' if status == 'On Time' else 'late' }}">{{ status }}</td>
         </tr>
         {% endfor %}
     </table>
@@ -128,7 +146,7 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.setFontSize(14);
-            doc.text("Attendance Report", 14, 20);
+            doc.text("Attendance Report - {{ today }}", 14, 20);
 
             let table = document.getElementById("attendanceTable");
             let rows = table.querySelectorAll("tr");
