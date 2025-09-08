@@ -1,21 +1,33 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
+from datetime import datetime, time, timedelta
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 DB_NAME = "attendance.db"
 
+CLASS_START_TIME = time(9, 0)  # default 9:00 AM
+GRACE_PERIOD = 10  # 10 minutes for being "on time"
 
 # ---------- INIT DB ----------
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
 
+    # Students table
+    c.execute('''CREATE TABLE IF NOT EXISTS students (
+                    student_id TEXT PRIMARY KEY,
+                    name TEXT)''')
+
     # Attendance table
     c.execute('''CREATE TABLE IF NOT EXISTS attendance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
                     student_id TEXT,
                     name TEXT,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+                    class_date DATE,
+                    sign_in_time TIME,
+                    status TEXT,
+                    FOREIGN KEY(student_id) REFERENCES students(student_id))''')
 
     # Users table
     c.execute('''CREATE TABLE IF NOT EXISTS users (
@@ -33,7 +45,6 @@ def init_db():
 
 init_db()
 
-
 # ---------- STUDENT CHECK-IN ----------
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -41,13 +52,33 @@ def index():
         student_id = request.form["student_id"]
         name = request.form["name"]
 
+        today = datetime.now().date()
+        now_time = datetime.now().time()
+
+        # Determine status
+        class_start_dt = datetime.combine(today, CLASS_START_TIME)
+        cutoff = (class_start_dt + timedelta(minutes=GRACE_PERIOD)).time()
+
+        if now_time <= cutoff:
+            status = "On Time"
+        else:
+            status = "Late"
+
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
-        c.execute("INSERT INTO attendance (student_id, name) VALUES (?, ?)", (student_id, name))
+
+        # Save student info if not already in table
+        c.execute("INSERT OR IGNORE INTO students (student_id, name) VALUES (?, ?)", (student_id, name))
+
+        # Insert attendance record
+        c.execute("""INSERT INTO attendance (student_id, name, class_date, sign_in_time, status)
+                     VALUES (?, ?, ?, ?, ?)""",
+                  (student_id, name, today, now_time.strftime("%H:%M:%S"), status))
+
         conn.commit()
         conn.close()
 
-        return render_template("index.html", message=f"{name} checked in successfully!")
+        return render_template("index.html", message=f"{name} checked in as {status}!")
 
     return render_template("index.html")
 
@@ -124,19 +155,20 @@ def settings():
     return render_template("settings.html")
 
 
-# ---------- ATTENDANCE ----------
+# ---------- ATTENDANCE DASHBOARD ----------
 @app.route("/attendance")
 def attendance():
     if not session.get("logged_in"):
         return redirect(url_for("login"))
 
+    today = datetime.now().date()
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT student_id, name, timestamp FROM attendance")
+    c.execute("SELECT student_id, name, sign_in_time, status FROM attendance WHERE class_date=?", (today,))
     rows = c.fetchall()
     conn.close()
 
-    return render_template("attendance.html", rows=rows)
+    return render_template("attendance.html", rows=rows, today=today)
 
 
 # ---------- LOGOUT ----------
