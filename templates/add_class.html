@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Class</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #bb86fc;
+        }
+        form {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input {
+            padding: 8px;
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: #2c2c2c;
+            color: #e0e0e0;
+        }
+        button, a.btn {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            background-color: #bb86fc;
+            color: white;
+            text-decoration: none;
+        }
+        button:hover, a.btn:hover {
+            background-color: #9a67ea;
+        }
+    </style>
+</head>
+<body>
+    <h1>➕ Add New Class</h1>
+
+    <form method="POST">
+        <label>Course Code:</label>
+        <input type="text" name="course_code" required>
+
+        <label>Course Name:</label>
+        <input type="text" name="course_name" required>
+
+        <label>Date:</label>
+        <input type="date" name="class_date" required>
+
+        <label>Start Time:</label>
+        <input type="time" name="start_time" required>
+
+        <label>End Time:</label>
+        <input type="time" name="end_time" required>
+
+        <button type="submit">Save Class</button>
+    </form>
+
+    <br>
+    <a href="{{ url_for('manage_classes') }}" class="btn">⬅ Back</a>
+</body>
+</html>
