@@ -48,16 +48,6 @@
             background-color: #333;
         }
 
-        .status-on {
-            color: #03dac6;
-            font-weight: bold;
-        }
-
-        .status-late {
-            color: #ff5252;
-            font-weight: bold;
-        }
-
         button {
             margin: 5px;
             padding: 10px 15px;
@@ -94,14 +84,12 @@
             <th>Name</th>
             <th>Student ID</th>
             <th>Sign-in Time</th>
-            <th>Status</th>
         </tr>
-        {% for student_id, name, sign_in_time, status in rows %}
+        {% for student_id, name, sign_in_time in rows %}
         <tr>
             <td>{{ name }}</td>
             <td>{{ student_id }}</td>
             <td>{{ sign_in_time }}</td>
-            <td class="status-{{ 'on' if status == 'On Time' else 'late' }}">{{ status }}</td>
         </tr>
         {% endfor %}
     </table>
