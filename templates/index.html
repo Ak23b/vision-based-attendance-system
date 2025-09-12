@@ -23,6 +23,7 @@
             display: inline-block;
             text-align: left;
             border: 1px solid #333;
+            width: 300px;
         }
 
         label {
@@ -56,6 +57,7 @@
             background-color: #bb86fc;
             color: white;
             transition: background 0.3s;
+            width: 100%;
         }
 
         button:hover {
@@ -83,6 +85,10 @@
 
         <label for="name">Name:</label>
         <input type="text" name="name" required>
+
+        <!-- ✅ New Class Name field -->
+        <label for="class_name">Class Name:</label>
+        <input type="text" name="class_name" required>
 
         <button type="submit">✅ Mark Attendance</button>
     </form>
