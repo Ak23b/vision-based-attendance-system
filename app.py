@@ -18,11 +18,12 @@ def init_db():
                     student_id TEXT PRIMARY KEY,
                     name TEXT)''')
 
-    # Attendance table (status column will stay for compatibility, but unused)
+    # Attendance table (now with class_name column)
     c.execute('''CREATE TABLE IF NOT EXISTS attendance (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     student_id TEXT,
                     name TEXT,
+                    class_name TEXT,
                     class_date DATE,
                     sign_in_time TIME,
                     status TEXT,
@@ -50,6 +51,7 @@ def index():
     if request.method == "POST":
         student_id = request.form["student_id"]
         name = request.form["name"]
+        class_name = request.form["class_name"]   # ✅ new field
 
         today = datetime.now().date()
         now_time = datetime.now().time()
@@ -60,15 +62,15 @@ def index():
         # Save student info if not already in table
         c.execute("INSERT OR IGNORE INTO students (student_id, name) VALUES (?, ?)", (student_id, name))
 
-        # Insert attendance record (status is ignored, just set NULL)
-        c.execute("""INSERT INTO attendance (student_id, name, class_date, sign_in_time, status)
-                     VALUES (?, ?, ?, ?, NULL)""",
-                  (student_id, name, today, now_time.strftime("%H:%M:%S")))
+        # Insert attendance record with class_name
+        c.execute("""INSERT INTO attendance (student_id, name, class_name, class_date, sign_in_time, status)
+                     VALUES (?, ?, ?, ?, ?, NULL)""",
+                  (student_id, name, class_name, today, now_time.strftime("%H:%M:%S")))
 
         conn.commit()
         conn.close()
 
-        return render_template("index.html", message=f"{name} checked in!")
+        return render_template("index.html", message=f"{name} checked in for {class_name}!")
 
     return render_template("index.html")
 
@@ -154,8 +156,8 @@ def attendance():
     today = datetime.now().date()
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    # Only fetch id, name, time (ignore status)
-    c.execute("SELECT student_id, name, sign_in_time FROM attendance WHERE class_date=?", (today,))
+    # Fetch id, name, class_name, time
+    c.execute("SELECT student_id, name, class_name, sign_in_time FROM attendance WHERE class_date=?", (today,))
     rows = c.fetchall()
     conn.close()
 
