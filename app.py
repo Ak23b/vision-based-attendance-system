@@ -13,12 +13,13 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
 
-    # Students table
+    # Students table (now with class_name)
     c.execute('''CREATE TABLE IF NOT EXISTS students (
                     student_id TEXT PRIMARY KEY,
-                    name TEXT)''')
+                    name TEXT NOT NULL,
+                    class_name TEXT)''')
 
-    # Attendance table (now with class_name column)
+    # Attendance table
     c.execute('''CREATE TABLE IF NOT EXISTS attendance (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     student_id TEXT,
@@ -43,6 +44,7 @@ def init_db():
     conn.close()
 
 
+# Ensure tables are created on startup
 init_db()
 
 # ---------- STUDENT CHECK-IN ----------
@@ -59,10 +61,11 @@ def index():
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
 
-        # Save student info if not already in table
-        c.execute("INSERT OR IGNORE INTO students (student_id, name) VALUES (?, ?)", (student_id, name))
+        # Save student info (with class_name) if not already in table
+        c.execute("""INSERT OR REPLACE INTO students (student_id, name, class_name)
+                     VALUES (?, ?, ?)""", (student_id, name, class_name))
 
-        # Insert attendance record with class_name
+        # Insert attendance record
         c.execute("""INSERT INTO attendance (student_id, name, class_name, class_date, sign_in_time, status)
                      VALUES (?, ?, ?, ?, ?, NULL)""",
                   (student_id, name, class_name, today, now_time.strftime("%H:%M:%S")))
@@ -156,7 +159,6 @@ def attendance():
     today = datetime.now().date()
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    # Fetch id, name, class_name, time
     c.execute("SELECT student_id, name, class_name, sign_in_time FROM attendance WHERE class_date=?", (today,))
     rows = c.fetchall()
     conn.close()
