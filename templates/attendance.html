@@ -22,7 +22,7 @@
         table {
             margin: 20px auto;
             border-collapse: collapse;
-            width: 85%;
+            width: 90%;
             background-color: #1e1e1e;
             border: 1px solid #333;
             border-radius: 8px;
@@ -83,12 +83,14 @@
         <tr>
             <th>Name</th>
             <th>Student ID</th>
+            <th>Class Name</th> <!-- ✅ New column -->
             <th>Sign-in Time</th>
         </tr>
-        {% for student_id, name, sign_in_time in rows %}
+        {% for student_id, name, class_name, sign_in_time in rows %}
         <tr>
             <td>{{ name }}</td>
             <td>{{ student_id }}</td>
+            <td>{{ class_name }}</td> <!-- ✅ Display class -->
             <td>{{ sign_in_time }}</td>
         </tr>
         {% endfor %}
