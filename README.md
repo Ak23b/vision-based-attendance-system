@@ -1,6 +1,6 @@
 # Manual Attendance System (Lite)
 
-## NOTE: First delete the .db file in the main directory to create a new admin account and be able to use the app.
+## NOTE: First delete the .db file in the main directory to create a new admin account and be able to use the app
 
 A simple **manual attendance check-in system** built with **HTML + JavaScript**.  
 Users can enter their **Name** and **Student ID**, check in, and the system logs their attendance with a timestamp.  
