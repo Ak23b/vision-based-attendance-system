@@ -10,7 +10,7 @@ Attendance logs can be **exported to CSV or PDF** for easy reporting.
 
 ## ✨ Features
 
-- ✅ Manual check-in with Name + Student ID  
+- ✅ Manual check-in with Name + Student ID + Class
 - ✅ Stores logs in memory (browser)  
 - ✅ Export logs to **CSV** (Excel compatible)  
 - ✅ Export logs to **PDF** (formatted report)  
