@@ -52,6 +52,8 @@ Attendance logs can be **exported to CSV or PDF** for easy reporting.
 - Frontend: HTML, CSS, JavaScript
 - Libraries: jsPDF (for PDF export), FileSaver.js (for CSV export)
 - No backend required (runs entirely in the browser)
+- Optional: Flask (if you want to run a local server)
+- Optional: SQLite (if you want to store logs persistently)
 
 ## License
 
