@@ -163,6 +163,7 @@ def attendance():
     rows = c.fetchall()
     conn.close()
 
+
     return render_template("attendance.html", rows=rows, today=today)
 
 
