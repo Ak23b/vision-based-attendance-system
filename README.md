@@ -61,4 +61,5 @@ This project is licensed under the MIT License. See the [LICENSE](https://openso
 
 ## Acknowledgements
 
-- Inspired by various online tutorials on building attendance systems.
+- Inspired by various online tutorials on building attendance systems with web technologies.
+- Thanks to the open-source community for libraries like jsPDF and FileSaver.js.
