@@ -58,3 +58,7 @@ Attendance logs can be **exported to CSV or PDF** for easy reporting.
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
+
+## Acknowledgements
+
+- Inspired by various online tutorials on building attendance systems.
